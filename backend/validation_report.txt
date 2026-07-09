@@ -1,0 +1,10 @@
+Post-Migration Validation Audit Report
+=======================================
+
+PASS - Create a new user
+PASS - Login with JWT
+PASS - Create a product
+PASS - Fetch products
+PASS - Create an order
+PASS - Add wishlist item
+PASS - Submit loan request
