@@ -1,0 +1,150 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    @apply font-sans antialiased bg-gray-50 text-gray-900;
+    margin: 0;
+  }
+  :root {
+    --color-primary: #16a34a;
+    --color-primary-light: #22c55e;
+    --sidebar-width: 256px;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-glow active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-semibold px-5 py-2.5 rounded-xl border border-gray-200 transition-all duration-200 shadow-sm active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-sm active:scale-95;
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-5 border border-gray-100;
+  }
+  .card-hover {
+    @apply card hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+  }
+
+  /* ── Form ── */
+  .input {
+    @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-800 bg-white transition-all duration-200;
+  }
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5;
+  }
+
+  /* ── Badge ── */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* ── Sidebar Link ── */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-all duration-150 font-medium cursor-pointer;
+  }
+  .sidebar-link.active {
+    @apply bg-primary-50 text-primary-700 font-semibold;
+  }
+
+  /* ── Stats card ── */
+  .stats-card {
+    @apply card flex flex-col gap-2;
+  }
+
+  /* ── Page header ── */
+  .page-header {
+    @apply text-2xl font-bold text-gray-900 mb-6;
+  }
+
+  /* ── Glass ── */
+  .glass {
+    @apply backdrop-blur-md bg-white/20 border border-white/30;
+  }
+  .glass-dark {
+    @apply backdrop-blur-md bg-black/20 border border-white/10;
+  }
+
+  /* ── Feature page layout (pages that use Sidebar) ── */
+  .feature-layout {
+    @apply flex min-h-screen bg-gray-50;
+  }
+  /* main area shifts right on desktop, full-width on mobile */
+  .feature-main {
+    @apply flex-1 p-4 sm:p-6 lg:p-8;
+    /* On mobile the sidebar is a drawer, so no margin needed */
+    margin-left: 0;
+    padding-top: 4rem; /* space for mobile hamburger */
+  }
+  @media (min-width: 768px) {
+    .feature-main {
+      margin-left: var(--sidebar-width);
+      padding-top: 2rem;
+    }
+  }
+
+  /* Rain animation */
+  .rain-drop {
+    position: absolute;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, rgba(147, 197, 253, 0.8));
+    border-radius: 0 0 2px 2px;
+    animation: rain 0.8s linear infinite;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-gray-100 rounded-full; }
+  ::-webkit-scrollbar-thumb { @apply bg-gray-300 rounded-full hover:bg-gray-400; }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-green-400;
+  }
+  .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+  .animate-slide-up { animation: slideUp 0.3s ease-out; }
+}
+
+/* ── Keyframes ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes rain {
+  from { transform: translateY(-10px); opacity: 1; }
+  to { transform: translateY(100vh); opacity: 0; }
+}
+@keyframes pulse-slow {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* ── Mobile: feature pages that still use ml-64 ── */
+@media (max-width: 767px) {
+  .ml-64 {
+    margin-left: 0 !important;
+    padding-top: 4rem;
+  }
+  .page-header {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .card {
+    padding: 1rem;
+  }
+}

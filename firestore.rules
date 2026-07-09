@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isLoggedIn()  { return request.auth != null; }
+    function isSelf(uid)   { return request.auth.uid == uid; }
+    function userRole()    { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role; }
+    function isApproved()  { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isApproved == true; }
+    function isAdmin()     { return isLoggedIn() && userRole() == 'admin'; }
+    function isSeller()    { return isLoggedIn() && userRole() == 'seller' && isApproved(); }
+    function isDelivery()  { return isLoggedIn() && userRole() == 'delivery' && isApproved(); }
+    function isBuyer()     { return isLoggedIn() && (userRole() == 'buyer' || userRole() == 'seller'); }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read:   if isLoggedIn() && (isSelf(uid) || isAdmin());
+      allow create: if isSelf(uid);
+      allow update: if isSelf(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Products ──────────────────────────────────────────────────────────────
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isLoggedIn() && isApproved();
+      allow update: if isAdmin() ||
+                       (isLoggedIn() && isApproved() &&
+                        resource.data.sellerId == request.auth.uid &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['status', 'isApproved']));
+      allow delete: if isAdmin() ||
+                       (isLoggedIn() && resource.data.sellerId == request.auth.uid);
+    }
+
+    // ── Orders ────────────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow read: if isLoggedIn() && (
+        isAdmin() ||
+        resource.data.buyerId == request.auth.uid ||
+        resource.data.sellerId == request.auth.uid ||
+        (resource.data.sellerIds is list && request.auth.uid in resource.data.sellerIds) ||
+        resource.data.deliveryAgentId == request.auth.uid
+      );
+      allow create: if isBuyer() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isAdmin() ||
+                       (isLoggedIn() && resource.data.sellerId == request.auth.uid) ||
+                       isDelivery() ||
+                       (isBuyer() &&
+                        resource.data.buyerId == request.auth.uid &&
+                        request.resource.data.status == 'cancelled' &&
+                        resource.data.status == 'pending');
+      allow delete: if isAdmin();
+    }
+
+    // ── Carts ─────────────────────────────────────────────────────────────────
+    match /carts/{uid} {
+      allow read, write: if isLoggedIn() && isSelf(uid);
+    }
+
+    // ── Wishlists ─────────────────────────────────────────────────────────────
+    match /wishlists/{wishId} {
+      allow read, write: if isLoggedIn() && resource.data.buyerId == request.auth.uid;
+      allow create: if isLoggedIn() && request.resource.data.buyerId == request.auth.uid;
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read:   if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isLoggedIn();
+      allow update: if isLoggedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    // ── Reviews ───────────────────────────────────────────────────────────────
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isBuyer() && request.resource.data.buyerId == request.auth.uid;
+      allow update, delete: if isAdmin() ||
+                               (isBuyer() && resource.data.buyerId == request.auth.uid);
+    }
+
+    // ── Delivery Agents ───────────────────────────────────────────────────────
+    match /deliveryAgents/{agentId} {
+      allow read:  if isLoggedIn() && (isAdmin() || isDelivery());
+      allow write: if isAdmin();
+    }
+
+    // ── Loan Applications ─────────────────────────────────────────────────────
+    match /loanApplications/{loanId} {
+      allow read:   if isLoggedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Market Prices ──────────────────────────────────────────────────────────
+    match /market_prices/{priceId} {
+      allow read: if isLoggedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Weather Alerts ─────────────────────────────────────────────────────────
+    match /weather_alerts/{alertId} {
+      allow read: if isLoggedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Disease Reports ────────────────────────────────────────────────────────
+    match /disease_reports/{reportId} {
+      allow read, write: if isLoggedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // ── AI Planner ─────────────────────────────────────────────────────────────
+    match /ai_planner/{planId} {
+      allow read, write: if isLoggedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isLoggedIn() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // ── Government Schemes ─────────────────────────────────────────────────────
+    match /government_schemes/{schemeId} {
+      allow read: if isLoggedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Breaking News ──────────────────────────────────────────────────────────
+    match /breaking_news/{newsId} {
+      allow read: if isLoggedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Notification Logs ──────────────────────────────────────────────────────
+    match /notification_logs/{logId} {
+      allow read: if isLoggedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isLoggedIn();
+    }
+
+    // ── Deny everything else ──────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
